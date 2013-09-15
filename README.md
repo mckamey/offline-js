@@ -127,7 +127,7 @@ Tests the support of localStorage.
 Unit Tests
 ----------
 
-Run the [unit tests](./test/unit.html).
+Run the [unit tests](http://mckamey.github.io/offline-js/test/unit.html).
 
 License
 -------
