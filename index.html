@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Offline data cache (offline.js)</title>
+	<link href="lib/github.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+<h1><a href="http://github.com/mckamey/offline-js">Offline data cache (offline.js)</a></h1>
+
+<p><code>offline.js</code> enables access to recently retrieved data when the application becomes disconnected.
+It can also act as a simple expiring data cache, or as a wrapper for localStorage access.</p>
+
+<p>This library does not depend on anything else besides <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Storage">DOM Storage</a>.
+If localStorage is not available, then it will simply not ever hold anything in cache. Nothing needs to change from the client perspective.</p>
+
+<h2>Primary Usage Pattern</h2>
+
+<p>To achieve both an expiring cache (for recently requested data) as well as an offline data cache, this is the pattern to integrate into your remote data access.
+To achieve just an offline data cache, skip step 1 or set <code>expiry</code> to zero.</p>
+
+<ol>
+<li>If <code>offline.fresh(key)</code>, then return <code>offline.get(key)</code>.</li>
+<li>Otherwise, execute remote API call.</li>
+<li>If remote API call was successful, store <code>offline.set(key, value, expiry)</code> and return <code>value</code>.</li>
+<li>If remote API call failed (e.g., <code>status === 0</code>), attempt <code>offline.get(key)</code>.</li>
+<li>If <code>value</code> is missing, notify caller of offline/remote error.</li>
+</ol>
+
+
+<h2>lscache</h2>
+
+<p>This library began as a fork of the excellent <a href="https://github.com/pamelafox/lscache">lscache</a> by Pamela Fox.
+While trying to implement the offline usage pattern, it became clear that some breaking changes needed to be made to the interface.
+Rather than confuse the two libraries, <code>offline.js</code> deviates from <code>lscache.js</code> to solve a related but slightly different problem:</p>
+
+<ul>
+<li>Additional methods were added to allow insight into freshness of cached items and the expiring of items without removing.</li>
+<li><code>offline.get()</code> does not automatically remove items by default.
+There is an optional argument to achieve that effect.</li>
+<li>Data stored without expiry times are given an expiry of <code>MAX_DATE/2</code>.
+This enables expunging non-expiring values by insertion time but they still effectively never expire.</li>
+<li>The storage format has been altered to make a little easier to read with smaller keys and expiry values.</li>
+<li>All data values are JSON encoded (including strings, unlike in lscache) to avoid ambiguity with JSON-like string values.</li>
+<li>The additional space required is more than made up for by shorter keys and expiry values.</li>
+<li>The concept of "buckets" has been removed in favor of being able to <code>flush()</code> items with a prefix.
+The purpose is the same but the usage is simpler and less error prone.</li>
+</ul>
+
+
+<h2>Online / Offline Events</h2>
+
+<p>Initially, this was going to incorporate hooks for <a href="https://developer.mozilla.org/en-US/docs/Online_and_offline_events">HTML 5 Online/Offline events</a>.
+Ultimately, this seemed to only be partially useful and <a href="http://remysharp.com/2011/04/19/broken-offline-support/">potentially broken</a>.
+Even in browsers where <code>navigator.onLine</code> is implemented to spec, it doesn't apply to the situation where the remote API is unavailable.
+The decision has therefore been made to allow the application to decide what is considered "offline".
+Typically, this is implemented as a status of <code>0</code> as opposed to the server response of the <code>400</code>-<code>500</code> range.</p>
+
+<h2>Methods</h2>
+
+<h3><code>value = offline.get(key, expunge)</code></h3>
+
+<p>Retrieves a previously stored value, optionally removing stale data.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>key</strong>: the storage key</li>
+<li><code>boolean</code> <strong>expunge</strong> (optional): if should auto-remove expired items</li>
+</ul>
+
+
+<h4>Returns</h4>
+
+<ul>
+<li><code>object|array|string|number|boolean|null</code>: the storage value</li>
+</ul>
+
+
+<h3><code>offline.set(key, value, expiry)</code></h3>
+
+<p>Stores the key-value pair with a freshness time limit.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>key</strong>: the storage key</li>
+<li><code>object|array|string|number|boolean|null</code> <strong>value</strong>: the storage value</li>
+<li><code>number</code> <strong>expiry</strong> (optional): the number of minutes before value is stale</li>
+</ul>
+
+
+<h3><code>isFresh = offline.fresh(key)</code></h3>
+
+<p>Tests the expiration of the data. Returns false if the value is stale or missing.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>key</strong>: the storage key</li>
+</ul>
+
+
+<h4>Returns</h4>
+
+<ul>
+<li><code>boolean</code>: if the value has expired or is missing</li>
+</ul>
+
+
+<h3><code>offline.expire(key)</code></h3>
+
+<p>If still fresh then marks the data as now expired.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>key</strong>: the storage key</li>
+</ul>
+
+
+<h3><code>offline.remove(key)</code></h3>
+
+<p>Removes the data stored at <code>key</code>.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>key</strong>: the storage key</li>
+</ul>
+
+
+<h3><code>offline.flush(prefix)</code></h3>
+
+<p>Removes all data with the given key prefix.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>string</code> <strong>prefix</strong> (optional): the storage key</li>
+</ul>
+
+
+<h3><code>offline.enableWarnings(enabled)</code></h3>
+
+<p>Enables or disables log warnings on quota or insertion errors.</p>
+
+<h4>Arguments</h4>
+
+<ul>
+<li><code>boolean</code> <strong>enabled</strong>: true to enable warnings</li>
+</ul>
+
+
+<h3><code>hasLocalStorage = offline.supported()</code></h3>
+
+<p>Tests the support of localStorage.</p>
+
+<h4>Returns</h4>
+
+<ul>
+<li><code>boolean</code>: if localStorage is supported.</li>
+</ul>
+
+
+<h2>Unit Tests</h2>
+
+<p>Run the <a href="./test/unit.html">unit tests</a>.</p>
+
+<h2>License</h2>
+
+<p><a href="http://github.com/mckamey/offline-js">offline.js</a> is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.<br/>
+Copyright &copy; 2013, <a href="http://mck.me">Stephen M. McKamey</a>.</p>
+
+<p>offline.js is a derivative work of <a href="https://github.com/pamelafox/lscache">lscache</a> which is also licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.<br/>
+Copyright &copy; 2011, Pamela Fox.</p>
+
+</body>
+</html>
