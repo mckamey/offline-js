@@ -124,10 +124,10 @@ test('flush() with prefix', function() {
 	var key = 'thekey';
 	var value1 = 'thevalue1';
 	var value2 = 'thevalue2';
-	var minutes = 5;
+	var seconds = 5000;
 	var prefix = 'alternate';
-	offline.set(key, value1, minutes);
-	offline.set(prefix+key, value2, minutes);
+	offline.set(key, value1, seconds);
+	offline.set(prefix+key, value2, seconds);
 
 	equal(offline.get(key), value1, 'Expect value to be ' + value1 + ' without the prefix.');
 	equal(offline.get(prefix+key), value2, 'Expect value to be ' + value2 + ' with the prefix.');
@@ -231,15 +231,14 @@ test('quota exceeding', function() {
 	}
 });
 
-// Do this test last since it must wait 1 minute
-test('set(), get() and fresh() with expiration of 0 minutes', function() {
+test('set(), get() and fresh() with expiration of 0 seconds', function() {
 	expect(4);
 
 	var key = 'thekey';
 	var value = Math.PI;
-	var minutes = 0;
+	var seconds = 0;
 
-	offline.set(key, value, minutes);
+	offline.set(key, value, seconds);
 
 	equal(offline.fresh(key), false, 'Expect value to have expired');
 	if (offline.supported()) {
@@ -251,15 +250,15 @@ test('set(), get() and fresh() with expiration of 0 minutes', function() {
 	equal(offline.get(key), null, 'Expect value to ne null');
 });
 
-// Do this test last since it must wait 1 minute
-asyncTest('set(), get() and fresh() with expiration of 1 minute', function() {
+// Do this test last since it must wait 10 seconds
+asyncTest('set(), get() and fresh() with expiration of 10 seconds', function() {
 	expect(4);
 
 	var key = 'thekey';
 	var value = Math.PI;
-	var minutes = 1;
+	var seconds = 10;
 
-	offline.set(key, value, minutes);
+	offline.set(key, value, seconds);
 
 	setTimeout(function() {
 		equal(offline.fresh(key), false, 'Expect value to have expired');
@@ -271,7 +270,7 @@ asyncTest('set(), get() and fresh() with expiration of 1 minute', function() {
 		equal(offline.get(key, true), null, 'Expect value to be null');
 		equal(offline.get(key), null, 'Expect value to ne null');
 		start();
-	}, 1000*60*minutes);
+	}, 1000*seconds);
 });
 
 }catch(ex){alert(ex);}

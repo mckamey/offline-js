@@ -1,5 +1,5 @@
 /**
- * offline.js v1.0
+ * offline.js v1.0.1
  * http://github.com/mckamey/offline-js
  * http://www.apache.org/licenses/LICENSE-2.0
  */
@@ -24,9 +24,9 @@ var offline = (function(localStorage, console, window) {
 	var EXPIRY_RADIX = 36;
 
 	/**
-	 * @const @type {number} expiration date resolution in minutes
+	 * @const @type {number} expiration date resolution in seconds
 	 */
-	var EXPIRY_UNITS = 60 * 1000;
+	var EXPIRY_UNITS = 1000;
 
 	/**
 	 * @const @type {number} ECMAScript max Date (epoch + 1e8 days)
@@ -122,8 +122,8 @@ var offline = (function(localStorage, console, window) {
 	};
 
 	/**
-	 * The number of minutes since the epoch plus offset.
-	 * @param {number=} offset number of minutes added to now
+	 * The number of seconds since the epoch plus offset.
+	 * @param {number=} offset number of seconds added to now
 	 * @return {number}
 	 */
 	var getDate = function(offset) {
@@ -270,9 +270,9 @@ var offline = (function(localStorage, console, window) {
 		 * Stores a value in the cache
 		 * @param {string} key storage key
 		 * @param {*} value storage value
-		 * @param {number} minutes expiry in minutes
+		 * @param {number} seconds expiry in seconds
 		 */
-		set: function(key, value, minutes) {
+		set: function(key, value, seconds) {
 			if (!hasStorage()) { return; }
 
 			if (HAS_JSON) {
@@ -289,15 +289,15 @@ var offline = (function(localStorage, console, window) {
 				return;
 			}
 
-			if (!isFinite(+minutes)) {
+			if (!isFinite(+seconds)) {
 				// use half of MAX_DATE as offset when none set
 				// this enables expunging of non-expiring items
 				// by insertion time.
-				minutes = MAX_DATE/2;
+				seconds = MAX_DATE/2;
 			}
 
 			// encode expiry time as string
-			var expiry = getDate(minutes).toString(EXPIRY_RADIX);
+			var expiry = getDate(seconds).toString(EXPIRY_RADIX);
 
 			try {
 				setItem(key, value);

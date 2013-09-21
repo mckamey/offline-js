@@ -70,7 +70,7 @@ Stores the key-value pair with a freshness time limit.
 
 - `string` **key**: the storage key
 - `object|array|string|number|boolean|null` **value**: the storage value
-- `number` **expiry** (optional): the number of minutes before value is stale
+- `number` **expiry** (optional): the number of seconds before value is stale
 
 ### `isFresh = offline.fresh(key)`
 
